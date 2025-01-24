@@ -19,5 +19,6 @@ jobs:
 
       - name: Fetching specific version of submodules
         run: |
-          git submodule foreach --recursive 'git checkout tags/4.11.0'
+          git submodule foreach --recursive 'git fetch --tags'
+          git submodule foreach --recursive 'git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name"'
           git submodule foreach --recursive 'git pull --ff-only'
