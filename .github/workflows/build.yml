@@ -37,13 +37,21 @@ jobs:
           ./vcpkg/bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
           echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
-      
-      - name: Install OpenCV Dependencies
+    
+      - name: Install Tesseract Dependency
         run: |
-          echo $Env:VCPKG_ROOT
           & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
+        shell: powershell
+      
+      - name: Integrate VCPKG with CMake
+        run: |
           & "$Env:VCPKG_ROOT\vcpkg" integrate install
+        shell: powershell
+      
+      - name: List Installed VCPKG Packages
+        run: |
           & "$Env:VCPKG_ROOT\vcpkg" list
         shell: powershell
+        
 
 
