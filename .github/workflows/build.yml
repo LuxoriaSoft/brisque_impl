@@ -56,36 +56,8 @@ jobs:
         if: ${{ matrix.platform == 'win' }}
         run: |
           echo ${env:VCPKG_ROOT}
-          & ${env:VCPKG_ROOT}\vcpkg install tesseract:${{matrix.arch}}-windows-static
+          & ${env:VCPKG_ROOT}\vcpkg install opencv4[contrib]:${{matrix.arch}}-windows-static
           & ${env:VCPKG_ROOT}\vcpkg integrate install
           & ${env:VCPKG_ROOT}\vcpkg list
           ls ${env:VCPKG_ROOT}\installed
-          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static
-          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\include
-          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\lib
-
-      - name: Build OpenCV
-        shell: powershell
-        run: |
-          Set-PSDebug -Trace 1
-          if ("${{matrix.platform}}" -eq 'win'){
-            . ".\build_windows.ps1"
-            BuildForWindows ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
-          }
-          elseif ("${{matrix.platform}}" -eq 'uwp'){
-            . ".\build_uwp.ps1"
-            BuildForUWP ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
-          }
-
-      - name: Set Version Variable
-        id: version
-        shell: powershell
-        run: |
-          $v = ${env:OPENCV_VERSION}.Replace(".", "")
-          echo "::set-output name=OPENCV_VERSION_MOD::${v}"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: opencv${{steps.version.outputs.OPENCV_VERSION_MOD}}_${{matrix.platform}}_${{matrix.arch}}
-          path: build_${{matrix.platform}}_${{matrix.arch}}/install
+          
