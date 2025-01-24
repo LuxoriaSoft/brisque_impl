@@ -41,8 +41,9 @@ jobs:
       - name: Add VCPKG
         shell: powershell
         run: |
-          # Write current pat
-          Write-Host "Current PATH: $env:PATH"
+          # Write current path
+          Write-Host "Current directory: $pwd"
+
           # Define VCPKG directory path
           $vcpkgDir = ".\vcpkg"
 
