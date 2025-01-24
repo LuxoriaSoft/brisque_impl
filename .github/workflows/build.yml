@@ -58,8 +58,10 @@ jobs:
           $vcpkgAbsolutePath = Resolve-Path $vcpkgDir
 
           # Add VCPKG paths to the environment
-          echo "VCPKG_ROOT=$($vcpkgAbsolutePath -replace '\\', '/')" | Out-File -FilePath $Env:GITHUB_ENV -Append
-          echo "PATH=$Env:PATH;$($vcpkgAbsolutePath -replace '\\', '/')" | Out-File -FilePath $Env:GITHUB_ENV -Append
+          Write-Host "Adding VCPKG_ROOT environment variable..."
+          [System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', $vcpkgAbsolutePath, [System.EnvironmentVariableTarget]::Process)
+          $env:PATH += ";$vcpkgAbsolutePath"
+          Write-Host "VCPKG_ROOT environment variable added."
 
       - name: Install Tesseract Dependency
         run: |
