@@ -7,6 +7,12 @@ jobs:
   build_packages:
     runs-on: windows-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ["win"]
+        arch: ["x64"]
+
     steps:
       - name: Fetch code
         uses: actions/checkout@v4
