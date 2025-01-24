@@ -40,12 +40,16 @@ jobs:
       - name: Install NASM to support SIMD optimizations 
         uses: ilammy/setup-nasm@v1
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11.5
-        if: ${{ matrix.platform == 'win' }}
-        with:
-          vcpkgGitCommitId: "64adda19c86e89526b5e27703a193c14477cce07"
-          vcpkgGitURL: https://github.com/shimat/vcpkg.git
+      - name: Install vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          cd C:\vcpkg
+          .\bootstrap-vcpkg.bat
+  
+      - name: Add vcpkg to PATH
+        shell: pwsh
+        run: |
+          echo "::add-path::C:\vcpkg"
 
       - name: Vcpkg
         shell: powershell
