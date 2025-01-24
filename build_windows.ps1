@@ -85,8 +85,8 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
         -D Lept_LIBRARY="${vcpkgPath}/installed/${targetPlatform}-windows-static/lib/leptonica-1.81.0.lib" `
         -D ENABLE_CXX11=1 `
         -D OPENCV_ENABLE_NONFREE=ON `
-        -D OPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules `
-        -D BUILD_SHARED_LIBS=OFF ../opencv
+        -D OPENCV_EXTRA_MODULES_PATH=../libs/opencv_contrib/modules `
+        -D BUILD_SHARED_LIBS=OFF ../libs/opencv
     # ENABLE_CXX11 is for Tesseract (https://github.com/opencv/opencv_contrib/blob/a26f71313009c93d105151094436eecd4a0990ed/modules/text/cmake/init.cmake#L19)
 
     if ($runMsbuild) {
@@ -106,12 +106,11 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
 If ((Resolve-Path -Path $MyInvocation.InvocationName).ProviderPath -eq $MyInvocation.MyCommand.Path) {
 
     ##### Change here #####
-    $vcpkgPath = "C:\Projects\vcpkg"
     $platform = "x64"
     #$platform = "x86"
     #$platform = "arm64"
 
-    Invoke-Expression "${vcpkgPath}\vcpkg.exe install tesseract:${platform}-windows-static" -ErrorAction Stop
+    Invoke-Expression "vcpkg install tesseract:${platform}-windows-static" -ErrorAction Stop
     #Invoke-Expression "${vcpkgPath}\vcpkg.exe integrate install" -ErrorAction Stop
 
     BuildForWindows $platform $vcpkgPath $FALSE

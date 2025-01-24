@@ -1,73 +1,101 @@
-name: Build OpenCV + OpenCV-Contrib
+function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform) {  
+    # Set default host platform if not provided
+    if (-not $hostPlatform) {
+        $hostPlatform = "x64"
+    }
 
-env:
-  OPENCV_VERSION: 4.11.0
+    # Set build directory
+    $buildDirectory = "build_win_${targetPlatform}"
+    mkdir $buildDirectory -Force -ErrorAction Stop | Out-Null
+    cd $buildDirectory
+    Write-Host "Building in directory: $(pwd)"
 
-on:
-  push:
+    # Determine platform-specific settings
+    if ($targetPlatform -eq "x64") {
+        $targetProcessor = "AMD64"
+        $msbuildPlatform = "x64"
+        $msmfFlag = "ON"
+        $caroteneFlag = "ON"
+    }
+    elseif ($targetPlatform -eq "arm64") {
+        $targetProcessor = "ARM64"
+        $msbuildPlatform = "ARM64"
+        $msmfFlag = "ON"
+        $caroteneFlag = "OFF"
+    }
+    else {
+        $targetProcessor = "x86"
+        $msbuildPlatform = "Win32"
+        $msmfFlag = "OFF" # MSMF not supported on x86
+        $caroteneFlag = "ON"
+    }
 
-jobs:
-  build_packages:
-    runs-on: windows-latest
+    # Determine host processor
+    if ($hostPlatform -eq "x64") {
+        $hostProcessor = "AMD64"
+    } elseif ($hostPlatform -eq "arm64") {
+        $hostProcessor = "ARM64"
+    } else {
+        $hostProcessor = "x86"
+    }
 
-    strategy:
-      matrix:
-        platform: ["win"]
-        arch: ["x64"]
+    # Handle cross-compiling
+    $crossCompileOptions = ""
+    if ($hostPlatform -ne $targetPlatform) {
+        $crossCompileOptions = "-D CMAKE_CROSSCOMPILING=1"
+    }
 
-    steps:
-      - name: Fetch code
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    # Run CMake configuration
+    cmake -G "Visual Studio 17 2022" `
+        -A $msbuildPlatform `
+        $crossCompileOptions `
+        -D CMAKE_SYSTEM_HOST_PROCESSOR=$hostProcessor `
+        -D CMAKE_SYSTEM_PROCESSOR=$targetProcessor `
+        -D CMAKE_SYSTEM_NAME=Windows `
+        -D CMAKE_SYSTEM_VERSION=10.0 `
+        -D CMAKE_BUILD_TYPE=Release `
+        -D CMAKE_INSTALL_PREFIX=install `
+        -D INSTALL_C_EXAMPLES=OFF `
+        -D INSTALL_PYTHON_EXAMPLES=OFF `
+        -D BUILD_DOCS=OFF `
+        -D BUILD_WITH_DEBUG_INFO=OFF `
+        -D BUILD_EXAMPLES=OFF `
+        -D BUILD_TESTS=OFF `
+        -D BUILD_PERF_TESTS=OFF `
+        -D BUILD_JAVA=OFF `
+        -D BUILD_opencv_world=OFF `
+        -D WITH_MSMF=${msmfFlag} `
+        -D WITH_QT=OFF `
+        -D WITH_TESSERACT=ON `
+        -D Tesseract_INCLUDE_DIR="${vcpkgPath}/installed/${targetPlatform}-windows-static/include" `
+        -D Tesseract_LIBRARY="${vcpkgPath}/installed/${targetPlatform}-windows-static/lib/tesseract.lib" `
+        -D Lept_LIBRARY="${vcpkgPath}/installed/${targetPlatform}-windows-static/lib/leptonica.lib" `
+        -D ENABLE_CXX11=1 `
+        -D OPENCV_ENABLE_NONFREE=ON `
+        -D OPENCV_EXTRA_MODULES_PATH=../libs/opencv_contrib/modules `
+        -D BUILD_SHARED_LIBS=OFF ../libs/opencv
 
-      - name: Fetching submodule tags and checkout specific version
-        run: |
-          git submodule foreach --recursive 'git fetch --tags'
-          git submodule foreach --recursive '
-            git checkout tags/${{ env.OPENCV_VERSION }} || echo "Tag ${{ env.OPENCV_VERSION }} not found in $name";
-            git reset --hard tags/${{ env.OPENCV_VERSION }} || echo "Reset failed for $name"'
+    # Build the project with MSBuild if requested
+    if ($runMsbuild) {
+        Write-Host "Building with MSBuild for platform: $msbuildPlatform"
+        msbuild INSTALL.vcxproj /t:build /p:configuration=Release /p:platform=$msbuildPlatform -maxcpucount
+        Write-Host "Build completed. Listing build output:"
+        ls
+    }
 
-      - name: Add MSBuild
-        uses: microsoft/setup-msbuild@v2
+    # Return to the parent directory
+    cd ..
+}
 
-      - name: Check CMake Version
-        run: cmake --version
+# Entry Point
+if ((Resolve-Path -Path $MyInvocation.InvocationName).ProviderPath -eq $MyInvocation.MyCommand.Path) {
+    # Target platform for the build
+    $platform = "x64"
 
-      - name: Add VCPKG
-        run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.bat
-          echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
-          echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
+    # Ensure VCPKG dependencies are installed
+    Write-Host "Installing Tesseract dependency with vcpkg for platform: $platform"
+    Invoke-Expression "vcpkg install tesseract:${platform}-windows-static" -ErrorAction Stop
 
-      - name: Install Tesseract Dependency
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
-        shell: powershell
-
-      - name: Integrate VCPKG with CMake
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" integrate install
-        shell: powershell
-
-      - name: List Installed VCPKG Packages
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" list
-        shell: powershell
-
-      - name: Build OpenCV
-        shell: powershell
-        run: |
-          # Optional: Enable debugging for troubleshooting
-          # Set-PSDebug -Trace 1
-
-          # Make sure the script exists
-          if (-Not (Test-Path ".\build_windows.ps1")) {
-              Write-Error "Script build_windows.ps1 not found in the repository root."
-              exit 1
-          }
-
-          # Run the build script with parameters
-          . ".\build_windows.ps1"
-          BuildForWindows ${{ matrix.arch }} "${Env:VCPKG_ROOT}" $TRUE
+    # Start the build process
+    BuildForWindows $platform $Env:VCPKG_ROOT $FALSE
+}
