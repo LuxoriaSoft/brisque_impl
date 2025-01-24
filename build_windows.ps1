@@ -106,12 +106,7 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
 If ((Resolve-Path -Path $MyInvocation.InvocationName).ProviderPath -eq $MyInvocation.MyCommand.Path) {
 
     ##### Change here #####
-    $vcpkgPath = $Env:VCPKG_ROOT
-    if (-not $vcpkgPath) {
-        Write-Error "VCPKG_ROOT environment variable is not set. Exiting."
-        exit 1
-    }
-
+    $vcpkgPath = "C:\Projects\vcpkg"
     $platform = "x64"
     #$platform = "x86"
     #$platform = "arm64"
@@ -119,5 +114,5 @@ If ((Resolve-Path -Path $MyInvocation.InvocationName).ProviderPath -eq $MyInvoca
     Invoke-Expression "${vcpkgPath}\vcpkg.exe install tesseract:${platform}-windows-static" -ErrorAction Stop
     #Invoke-Expression "${vcpkgPath}\vcpkg.exe integrate install" -ErrorAction Stop
 
-    #BuildForWindows $platform $vcpkgPath $FALSE
+    BuildForWindows $platform $vcpkgPath $FALSE
 }

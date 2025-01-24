@@ -1,107 +1,87 @@
-name: Build OpenCV + OpenCV-Contrib
-
-env:
-  OPENCV_VERSION: 4.11.0
+name: Windows Server 2022
 
 on:
-  push:
+  pull_request:
+    types: [synchronize, opened]
+
+env:
+  OPENCV_VERSION: 4.10.0
 
 jobs:
-  build_packages:
-    runs-on: windows-latest
+  build:
 
     strategy:
+      fail-fast: false
       matrix:
         platform: ["win"]
-        arch: ["x64"]
+        #platform: ["win", "uwp"]
+        arch: ["x86", "x64", "ARM", "arm64"]
+        exclude:
+          - platform: win
+            arch: ARM
+
+    runs-on: windows-2022
 
     steps:
-      - name: Fetch code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 1
           submodules: recursive
 
-      - name: Cache VCPKG
-        uses: actions/cache@v3
-        with:
-          path: |
-            vcpkg/installed
-            vcpkg/buildtrees
-            vcpkg/downloads
-          key: vcpkg-${{ runner.os }}-${{ matrix.arch }}-${{ env.OPENCV_VERSION }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-${{ matrix.arch }}-
+      - name: Install Server-Media-Foundation
+        shell: powershell
+        run: |
+          Install-WindowsFeature Server-Media-Foundation
 
-      - name: Add MSBuild
+      - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Check CMake Version
-        run: cmake --version
+      - name: Install NASM to support SIMD optimizations 
+        uses: ilammy/setup-nasm@v1
 
-      - name: Add VCPKG
-        shell: powershell
-        run: |
-          # Write current path
-          Write-Host "Current directory: $pwd"
-
-          # Define VCPKG directory path
-          $vcpkgDir = ".\vcpkg"
-
-          # Install VCPKG if ./vcpkg folder does not exist
-          if (-Not (Test-Path $vcpkgDir)) {
-              Write-Host "vcpkg folder not found. Cloning and bootstrapping vcpkg..."
-              git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
-              & "$vcpkgDir\bootstrap-vcpkg.bat"
-              Write-Host "vcpkg installed successfully."
-          } else {
-              Write-Host "vcpkg is already installed."
-          }
-
-          # Resolve the absolute path of VCPKG directory
-          $vcpkgAbsolutePath = Resolve-Path $vcpkgDir
-
-          # Add VCPKG paths to the environment
-          Write-Host "Adding VCPKG_ROOT environment variable..."
-          [System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', $vcpkgAbsolutePath, [System.EnvironmentVariableTarget]::Process)
-          $env:PATH += ";$vcpkgAbsolutePath"
-          Write-Host "VCPKG_ROOT environment variable added."
-          Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
-
-      - name: Install Tesseract Dependency
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
-        shell: powershell
-
-      - name: Integrate VCPKG with CMake
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" integrate install
-        shell: powershell
-
-      - name: List Installed VCPKG Packages
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" list
-        shell: powershell
-
-      - name: Cache CMake Build Directory
-        uses: actions/cache@v3
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11.5
+        if: ${{ matrix.platform == 'win' }}
         with:
-          path: build_win_${{ matrix.arch }}
-          key: cmake-build-${{ runner.os }}-${{ matrix.arch }}-${{ env.OPENCV_VERSION }}
-          restore-keys: |
-            cmake-build-${{ runner.os }}-${{ matrix.arch }}-
+          vcpkgGitCommitId: "64adda19c86e89526b5e27703a193c14477cce07"
+          vcpkgGitURL: https://github.com/shimat/vcpkg.git
+
+      - name: Vcpkg
+        shell: powershell
+        if: ${{ matrix.platform == 'win' }}
+        run: |
+          echo ${env:VCPKG_ROOT}
+          & ${env:VCPKG_ROOT}\vcpkg install tesseract:${{matrix.arch}}-windows-static
+          & ${env:VCPKG_ROOT}\vcpkg integrate install
+          & ${env:VCPKG_ROOT}\vcpkg list
+          ls ${env:VCPKG_ROOT}\installed
+          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static
+          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\include
+          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\lib
 
       - name: Build OpenCV
         shell: powershell
         run: |
-          # Optional: Enable debugging for troubleshooting
-          # Set-PSDebug -Trace 1
-
-          # Make sure the script exists
-          if (-Not (Test-Path ".\build_windows.ps1")) {
-              Write-Error "Script build_windows.ps1 not found in the repository root."
-              exit 1
+          Set-PSDebug -Trace 1
+          if ("${{matrix.platform}}" -eq 'win'){
+            . ".\build_windows.ps1"
+            BuildForWindows ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
+          }
+          elseif ("${{matrix.platform}}" -eq 'uwp'){
+            . ".\build_uwp.ps1"
+            BuildForUWP ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
           }
 
-          # Run the build script with parameters
-          . ".\build_windows.ps1"
-          BuildForWindows ${{ matrix.arch }} "${Env:VCPKG_ROOT}" $TRUE
+      - name: Set Version Variable
+        id: version
+        shell: powershell
+        run: |
+          $v = ${env:OPENCV_VERSION}.Replace(".", "")
+          echo "::set-output name=OPENCV_VERSION_MOD::${v}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencv${{steps.version.outputs.OPENCV_VERSION_MOD}}_${{matrix.platform}}_${{matrix.arch}}
+          path: build_${{matrix.platform}}_${{matrix.arch}}/install
