@@ -44,15 +44,10 @@ jobs:
           # Define VCPKG directory path
           $vcpkgDir = "$(Resolve-Path .\vcpkg)"
 
-          # Install VCPKG if it doesn't already exist
-          if (-Not (Test-Path "$vcpkgDir\vcpkg.exe")) {
-              Write-Host "vcpkg.exe not found. Installing vcpkg."
-
-              # Clone vcpkg repository
-              git clone https://github.com/microsoft/vcpkg.git
-              .\vcpkg\bootstrap-vcpkg.bat
-          } else {
-              Write-Host "vcpkg is already installed."
+          # Install VCPKG if ./vcpkg folder does not exist
+          if (-Not (Test-Path $vcpkgDir)) {
+              git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
+              & "$vcpkgDir\bootstrap-vcpkg.bat"
           }
 
           # Add VCPKG paths to the environment
