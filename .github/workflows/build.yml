@@ -40,17 +40,28 @@ jobs:
 
       - name: Add VCPKG
         run: |
-          # Check if the vcpkg directory exists
+          # Check if vcpkg is properly bootstrapped
           if (-Not (Test-Path "./vcpkg/vcpkg.exe")) {
-              # Clone vcpkg repository if it doesn't already exist
-              if (-Not (Test-Path "./vcpkg")) {
-                  git clone https://github.com/microsoft/vcpkg.git
+              # If the vcpkg directory exists but is incomplete, remove it
+              if (Test-Path "./vcpkg") {
+                  Remove-Item -Recurse -Force "./vcpkg"
+                  Write-Host "Removed incomplete vcpkg directory."
               }
-              
-              # Bootstrap vcpkg
-              ./vcpkg/bootstrap-vcpkg.bat
+
+              # Clone the vcpkg repository
+              git clone https://github.com/microsoft/vcpkg.git
+              Write-Host "Cloned vcpkg repository."
+
+              # Run the bootstrap script
+              if (Test-Path "./vcpkg/bootstrap-vcpkg.bat") {
+                  ./vcpkg/bootstrap-vcpkg.bat
+                  Write-Host "Bootstrapped vcpkg successfully."
+              } else {
+                  Write-Error "Bootstrap script is missing in the vcpkg repository."
+                  exit 1
+              }
           } else {
-              Write-Host "vcpkg is already present and bootstrapped."
+              Write-Host "vcpkg is already bootstrapped and ready."
           }
 
           # Add VCPKG paths to the environment
