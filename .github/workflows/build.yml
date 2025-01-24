@@ -13,6 +13,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Fetching submodules
+        run: |
+          git submodule update --init --recursive
+
       - name: Fetching specific version of submodules
         run: |
           git submodule foreach --recursive 'git checkout tags/4.11.0'
