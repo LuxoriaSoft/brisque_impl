@@ -41,34 +41,27 @@ jobs:
       - name: Add VCPKG
         shell: powershell
         run: |
-          # Define vcpkg directory path
+          # Define the vcpkg directory path
           $vcpkgDir = ".\vcpkg"
-          $vcpkgExe = "$vcpkgDir\vcpkg.exe"
 
-          # Check if vcpkg.exe exists
-          if (-Not (Test-Path $vcpkgExe)) {
-              Write-Host "vcpkg.exe not found. Cloning and bootstrapping vcpkg."
+          # Clone the vcpkg repository
+          git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
+          Write-Host "Cloned vcpkg repository."
 
-              # Clone the vcpkg repository
-              git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
-              Write-Host "Cloned vcpkg repository."
-
-              # Bootstrap vcpkg
-              $bootstrapScript = "$vcpkgDir\bootstrap-vcpkg.bat"
-              if (Test-Path $bootstrapScript) {
-                  & $bootstrapScript
-                  Write-Host "Bootstrapped vcpkg successfully."
-              } else {
-                  Write-Error "Bootstrap script (bootstrap-vcpkg.bat) is missing. Exiting."
-                  exit 1
-              }
+          # Bootstrap vcpkg
+          $bootstrapScript = "$vcpkgDir\bootstrap-vcpkg.bat"
+          if (Test-Path $bootstrapScript) {
+              & $bootstrapScript
+              Write-Host "Bootstrapped vcpkg successfully."
           } else {
-              Write-Host "vcpkg.exe is already installed and ready to use."
+              Write-Error "Bootstrap script (bootstrap-vcpkg.bat) is missing. Exiting."
+              exit 1
           }
 
           # Add VCPKG paths to the environment
           echo "VCPKG_ROOT=$(Resolve-Path $vcpkgDir)" | Out-File -FilePath $Env:GITHUB_ENV -Append
           echo "PATH=$Env:PATH;$(Resolve-Path $vcpkgDir)" | Out-File -FilePath $Env:GITHUB_ENV -Append
+
 
       - name: Install Tesseract Dependency
         run: |
