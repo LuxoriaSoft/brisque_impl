@@ -21,12 +21,16 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Fetching submodule tags and checkout specific version
-        run: |
-          git submodule foreach --recursive 'git fetch --tags'
-          git submodule foreach --recursive '
-            git checkout tags/${{ env.OPENCV_VERSION }} || echo "Tag ${{ env.OPENCV_VERSION }} not found in $name";
-            git reset --hard tags/${{ env.OPENCV_VERSION }} || echo "Reset failed for $name"'
+      - name: Cache VCPKG
+        uses: actions/cache@v3
+        with:
+          path: |
+            vcpkg/installed
+            vcpkg/buildtrees
+            vcpkg/downloads
+          key: vcpkg-${{ runner.os }}-${{ matrix.arch }}-${{ env.OPENCV_VERSION }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ matrix.arch }}-
 
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -36,8 +40,10 @@ jobs:
 
       - name: Add VCPKG
         run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.bat
+          if (-Not (Test-Path "./vcpkg")) {
+            git clone https://github.com/microsoft/vcpkg.git
+            ./vcpkg/bootstrap-vcpkg.bat
+          }
           echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
           echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
 
@@ -55,6 +61,14 @@ jobs:
         run: |
           & "$Env:VCPKG_ROOT\vcpkg" list
         shell: powershell
+
+      - name: Cache CMake Build Directory
+        uses: actions/cache@v3
+        with:
+          path: build_win_${{ matrix.arch }}
+          key: cmake-build-${{ runner.os }}-${{ matrix.arch }}-${{ env.OPENCV_VERSION }}
+          restore-keys: |
+            cmake-build-${{ runner.os }}-${{ matrix.arch }}-
 
       - name: Build OpenCV
         shell: powershell

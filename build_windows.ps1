@@ -26,7 +26,7 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
     else {
         $targetProcessor = "x86"
         $msbuildPlatform = "Win32"
-        $msmfFlag = "OFF" # MSMF not supported on x86
+        $msmfFlag = "OFF"
         $caroteneFlag = "ON"
     }
 
@@ -43,6 +43,21 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
     $crossCompileOptions = ""
     if ($hostPlatform -ne $targetPlatform) {
         $crossCompileOptions = "-D CMAKE_CROSSCOMPILING=1"
+    }
+
+    # Define absolute paths for opencv and opencv_contrib
+    $repoRoot = (Get-Location).Path
+    $opencvPath = Join-Path $repoRoot "libs\opencv"
+    $opencvContribPath = Join-Path $repoRoot "libs\opencv_contrib"
+
+    # Verify paths exist
+    if (-Not (Test-Path $opencvPath)) {
+        Write-Error "OpenCV source directory not found: $opencvPath"
+        exit 1
+    }
+    if (-Not (Test-Path $opencvContribPath)) {
+        Write-Error "OpenCV Contrib source directory not found: $opencvContribPath"
+        exit 1
     }
 
     # Run CMake configuration
@@ -72,8 +87,8 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
         -D Lept_LIBRARY="${vcpkgPath}/installed/${targetPlatform}-windows-static/lib/leptonica.lib" `
         -D ENABLE_CXX11=1 `
         -D OPENCV_ENABLE_NONFREE=ON `
-        -D OPENCV_EXTRA_MODULES_PATH=../libs/opencv_contrib/modules `
-        -D BUILD_SHARED_LIBS=OFF ../libs/opencv
+        -D OPENCV_EXTRA_MODULES_PATH="$opencvContribPath/modules" `
+        -D BUILD_SHARED_LIBS=OFF $opencvPath
 
     # Build the project with MSBuild if requested
     if ($runMsbuild) {
