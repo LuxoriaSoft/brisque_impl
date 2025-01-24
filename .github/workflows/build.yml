@@ -25,8 +25,15 @@ jobs:
             git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name";
             git reset --hard tags/4.11.0 || echo "Reset failed for $name"'
       
-      - name: Add msbuild to PATH
+      - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
       
       - name: Check CMake Version
         run: cmake --version
+      
+      - name: Add VCPKG via Source
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=$(pwd)/vcpkg" >> $GITHUB_ENV
+          echo "PATH=$PATH:$(pwd)/vcpkg" >> $GITHUB_ENV
