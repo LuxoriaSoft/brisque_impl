@@ -1,10 +1,10 @@
 name: Build OpenCV + OpenCV-Contrib
 
-on:
-  push:
-
 env:
   OPENCV_VERSION: 4.11.0
+
+on:
+  push:
 
 jobs:
   build_packages:
@@ -25,54 +25,49 @@ jobs:
         run: |
           git submodule foreach --recursive 'git fetch --tags'
           git submodule foreach --recursive '
-            git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name";
-            git reset --hard tags/4.11.0 || echo "Reset failed for $name"'
-      
+            git checkout tags/${{ env.OPENCV_VERSION }} || echo "Tag ${{ env.OPENCV_VERSION }} not found in $name";
+            git reset --hard tags/${{ env.OPENCV_VERSION }} || echo "Reset failed for $name"'
+
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
-      
+
       - name: Check CMake Version
         run: cmake --version
-      
+
       - name: Add VCPKG
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           ./vcpkg/bootstrap-vcpkg.bat
           echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
           echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
-    
+
       - name: Install Tesseract Dependency
         run: |
           & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
         shell: powershell
-      
-    #  - name: Install OpenCV-Contrib Dependencies
-    #    run: |
-    #      & "$Env:VCPKG_ROOT\vcpkg" install opencv4[contrib]:${{ matrix.arch }}-windows-static
-    #    shell: powershell
-      
+
       - name: Integrate VCPKG with CMake
         run: |
           & "$Env:VCPKG_ROOT\vcpkg" integrate install
         shell: powershell
-      
+
       - name: List Installed VCPKG Packages
         run: |
           & "$Env:VCPKG_ROOT\vcpkg" list
         shell: powershell
-      
+
       - name: Build OpenCV
-      shell: powershell
-      run: |
-        Set-PSDebug -Trace 1
-        if ("${{matrix.platform}}" -eq 'win'){
+        shell: powershell
+        run: |
+          # Optional: Enable debugging for troubleshooting
+          # Set-PSDebug -Trace 1
+
+          # Make sure the script exists
+          if (-Not (Test-Path ".\build_windows.ps1")) {
+              Write-Error "Script build_windows.ps1 not found in the repository root."
+              exit 1
+          }
+
+          # Run the build script with parameters
           . ".\build_windows.ps1"
-          BuildForWindows ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
-        }
-        elseif ("${{matrix.platform}}" -eq 'uwp'){
-          . ".\build_uwp.ps1"
-          BuildForUWP ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
-        }
-        
-
-
+          BuildForWindows ${{ matrix.arch }} "${Env:VCPKG_ROOT}" $TRUE
