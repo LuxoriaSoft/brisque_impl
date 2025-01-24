@@ -62,6 +62,7 @@ jobs:
           [System.Environment]::SetEnvironmentVariable('VCPKG_ROOT', $vcpkgAbsolutePath, [System.EnvironmentVariableTarget]::Process)
           $env:PATH += ";$vcpkgAbsolutePath"
           Write-Host "VCPKG_ROOT environment variable added."
+          Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
 
       - name: Install Tesseract Dependency
         run: |
