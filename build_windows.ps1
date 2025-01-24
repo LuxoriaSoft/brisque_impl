@@ -106,7 +106,12 @@ function BuildForWindows($targetPlatform, $vcpkgPath, $runMsbuild, $hostPlatform
 If ((Resolve-Path -Path $MyInvocation.InvocationName).ProviderPath -eq $MyInvocation.MyCommand.Path) {
 
     ##### Change here #####
-    $vcpkgPath = "C:\Projects\vcpkg"
+    $vcpkgPath = $Env:VCPKG_ROOT
+    if (-not $vcpkgPath) {
+        Write-Error "VCPKG_ROOT environment variable is not set. Exiting."
+        exit 1
+    }
+
     $platform = "x64"
     #$platform = "x86"
     #$platform = "arm64"
