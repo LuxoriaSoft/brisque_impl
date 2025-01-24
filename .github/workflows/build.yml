@@ -12,3 +12,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Fetching specific version of submodules
+        run: |
+          git submodule foreach --recursive 'git checkout tags/4.11.0'
+          git submodule foreach --recursive 'git pull --ff-only'
