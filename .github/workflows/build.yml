@@ -42,17 +42,25 @@ jobs:
         shell: powershell
         run: |
           # Define VCPKG directory path
-          $vcpkgDir = "$(Resolve-Path .\vcpkg)"
+          $vcpkgDir = ".\vcpkg"
 
           # Install VCPKG if ./vcpkg folder does not exist
           if (-Not (Test-Path $vcpkgDir)) {
+              Write-Host "vcpkg folder not found. Cloning and bootstrapping vcpkg..."
               git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
               & "$vcpkgDir\bootstrap-vcpkg.bat"
+              Write-Host "vcpkg installed successfully."
+          } else {
+              Write-Host "vcpkg is already installed."
           }
 
+          # Resolve the absolute path of VCPKG directory
+          $vcpkgAbsolutePath = Resolve-Path $vcpkgDir
+
           # Add VCPKG paths to the environment
-          echo "VCPKG_ROOT=$vcpkgDir" | Out-File -FilePath $Env:GITHUB_ENV -Append
-          echo "PATH=$Env:PATH;$vcpkgDir" | Out-File -FilePath $Env:GITHUB_ENV -Append
+          echo "VCPKG_ROOT=$vcpkgAbsolutePath" | Out-File -FilePath $Env:GITHUB_ENV -Append
+          echo "PATH=$Env:PATH;$vcpkgAbsolutePath" | Out-File -FilePath $Env:GITHUB_ENV -Append
+
 
 
       - name: Install Tesseract Dependency
