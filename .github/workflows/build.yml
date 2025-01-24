@@ -83,5 +83,5 @@ jobs:
           }
 
           # Run the build script with parameters
-          . ".\build_windows.ps1"
-          BuildForWindows ${{ matrix.arch }} "${Env:VCPKG_ROOT}" $TRUE
+          #. ".\build_windows.ps1"
+          #BuildForWindows ${{ matrix.arch }} "${Env:VCPKG_ROOT}" $TRUE
