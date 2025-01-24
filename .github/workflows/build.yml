@@ -18,12 +18,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Fetching submodule tags and checkout specific version
-        run: |
-          git submodule foreach --recursive 'git fetch --tags'
-          git submodule foreach --recursive '
-            git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name";
-            git reset --hard tags/4.11.0 || echo "Reset failed for $name"'
+      #- name: Fetching submodule tags and checkout specific version
+      #  run: |
+      #    git submodule foreach --recursive 'git fetch --tags'
+      #    git submodule foreach --recursive '
+      #      git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name";
+      #      git reset --hard tags/4.11.0 || echo "Reset failed for $name"'
       
       - name: Add MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -41,6 +41,11 @@ jobs:
       - name: Install Tesseract Dependency
         run: |
           & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
+        shell: powershell
+      
+      - name: Install OpenCV-Contrib Dependencies
+        run: |
+          & "$Env:VCPKG_ROOT\vcpkg" install opencv4[contrib]:${{ matrix.arch }}-windows-static
         shell: powershell
       
       - name: Integrate VCPKG with CMake
