@@ -38,10 +38,10 @@ jobs:
           echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
           echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
     
-      - name: Install Tesseract Dependency
-        run: |
-          & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
-        shell: powershell
+    #  - name: Install Tesseract Dependency
+    #    run: |
+    #      & "$Env:VCPKG_ROOT\vcpkg" install tesseract:${{ matrix.arch }}-windows-static
+    #    shell: powershell
       
       - name: Install OpenCV-Contrib Dependencies
         run: |
