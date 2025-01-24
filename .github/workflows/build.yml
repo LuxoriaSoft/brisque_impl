@@ -42,32 +42,22 @@ jobs:
         shell: powershell
         run: |
           # Define VCPKG directory path
-          $vcpkgDir = ".\vcpkg"
+          $vcpkgDir = "$(Resolve-Path .\vcpkg)"
 
           # Install VCPKG if it doesn't already exist
           if (-Not (Test-Path "$vcpkgDir\vcpkg.exe")) {
               Write-Host "vcpkg.exe not found. Installing vcpkg."
 
               # Clone vcpkg repository
-              git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
-              Write-Host "Cloned vcpkg repository."
-
-              # Bootstrap vcpkg
-              $bootstrapScript = "$vcpkgDir\bootstrap-vcpkg.bat"
-              if (Test-Path $bootstrapScript) {
-                  & $bootstrapScript
-                  Write-Host "vcpkg bootstrapped successfully."
-              } else {
-                  Write-Error "Bootstrap script not found. Exiting."
-                  exit 1
-              }
+              git clone https://github.com/microsoft/vcpkg.git
+              .\vcpkg\bootstrap-vcpkg.bat
           } else {
               Write-Host "vcpkg is already installed."
           }
 
           # Add VCPKG paths to the environment
-          echo "VCPKG_ROOT=$(Resolve-Path $vcpkgDir)" | Out-File -FilePath $Env:GITHUB_ENV -Append
-          echo "PATH=$Env:PATH;$(Resolve-Path $vcpkgDir)" | Out-File -FilePath $Env:GITHUB_ENV -Append
+          echo "VCPKG_ROOT=$vcpkgDir" | Out-File -FilePath $Env:GITHUB_ENV -Append
+          echo "PATH=$Env:PATH;$vcpkgDir" | Out-File -FilePath $Env:GITHUB_ENV -Append
 
 
       - name: Install Tesseract Dependency
