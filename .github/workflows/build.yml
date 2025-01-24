@@ -41,15 +41,14 @@ jobs:
       - name: Add VCPKG
         shell: powershell
         run: |
-          # Define the vcpkg directory path
+          # Define VCPKG directory path
           $vcpkgDir = ".\vcpkg"
-          $vcpkgExe = "$vcpkgDir\vcpkg.exe"
 
-          # Install VCPKG only if it doesn't exist
-          if (-Not (Test-Path $vcpkgExe)) {
-              Write-Host "vcpkg.exe not found. Cloning and bootstrapping vcpkg."
+          # Install VCPKG if it doesn't already exist
+          if (-Not (Test-Path "$vcpkgDir\vcpkg.exe")) {
+              Write-Host "vcpkg.exe not found. Installing vcpkg."
 
-              # Clone the vcpkg repository
+              # Clone vcpkg repository
               git clone https://github.com/microsoft/vcpkg.git $vcpkgDir
               Write-Host "Cloned vcpkg repository."
 
@@ -57,13 +56,13 @@ jobs:
               $bootstrapScript = "$vcpkgDir\bootstrap-vcpkg.bat"
               if (Test-Path $bootstrapScript) {
                   & $bootstrapScript
-                  Write-Host "Bootstrapped vcpkg successfully."
+                  Write-Host "vcpkg bootstrapped successfully."
               } else {
-                  Write-Error "Bootstrap script (bootstrap-vcpkg.bat) is missing. Exiting."
+                  Write-Error "Bootstrap script not found. Exiting."
                   exit 1
               }
           } else {
-              Write-Host "vcpkg.exe is already installed and ready to use."
+              Write-Host "vcpkg is already installed."
           }
 
           # Add VCPKG paths to the environment
