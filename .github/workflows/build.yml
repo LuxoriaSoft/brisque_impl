@@ -13,12 +13,9 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Fetching submodules
-        run: |
-          git submodule update --init --recursive
-
-      - name: Fetching specific version of submodules
+      - name: Fetching submodule tags and checkout specific version
         run: |
           git submodule foreach --recursive 'git fetch --tags'
-          git submodule foreach --recursive 'git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name"'
-          git submodule foreach --recursive 'git pull --ff-only'
+          git submodule foreach --recursive '
+            git checkout tags/4.11.0 || echo "Tag 4.11.0 not found in $name";
+            git reset --hard tags/4.11.0 || echo "Reset failed for $name"'
