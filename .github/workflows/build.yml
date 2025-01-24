@@ -31,9 +31,10 @@ jobs:
       - name: Check CMake Version
         run: cmake --version
       
-      - name: Add VCPKG via Source
+      - name: Add VCPKG
         run: |
           git clone https://github.com/microsoft/vcpkg.git
           ./vcpkg/bootstrap-vcpkg.bat
-          echo "VCPKG_ROOT=$(pwd)/vcpkg" >> $GITHUB_ENV
-          echo "PATH=$PATH:$(pwd)/vcpkg" >> $GITHUB_ENV
+          echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
+          echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
+
