@@ -1,6 +1,6 @@
-[submodule "libs/libs/opencv"]
-	path = libs/libs/opencv
+[submodule "opencv"]
+	path = opencv
 	url = https://github.com/opencv/opencv.git
-[submodule "libs/libs/opencv_contrib"]
-	path = libs/libs/opencv_contrib
+[submodule "opencv_contrib"]
+	path = opencv_contrib
 	url = https://github.com/opencv/opencv_contrib.git
