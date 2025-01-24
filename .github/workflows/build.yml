@@ -40,10 +40,23 @@ jobs:
 
       - name: Add VCPKG
         run: |
-          git clone https://github.com/microsoft/vcpkg.git
-          ./vcpkg/bootstrap-vcpkg.bat
+          # Check if the vcpkg directory exists
+          if (-Not (Test-Path "./vcpkg/vcpkg.exe")) {
+              # Clone vcpkg repository if it doesn't already exist
+              if (-Not (Test-Path "./vcpkg")) {
+                  git clone https://github.com/microsoft/vcpkg.git
+              }
+              
+              # Bootstrap vcpkg
+              ./vcpkg/bootstrap-vcpkg.bat
+          } else {
+              Write-Host "vcpkg is already present and bootstrapped."
+          }
+
+          # Add VCPKG paths to the environment
           echo "VCPKG_ROOT=$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
           echo "PATH=$Env:PATH;$(pwd)/vcpkg" | Out-File -FilePath $Env:GITHUB_ENV -Append
+        shell: powershell
 
       - name: Install Tesseract Dependency
         run: |
