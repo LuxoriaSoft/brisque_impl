@@ -13,12 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: ["win"]
-        # platform: ["win", "uwp"]
-        arch: ["x86", "x64", "ARM", "arm64"]
-        exclude:
-          - platform: win
-            arch: ARM
+        os: ["windows-2022"]
+        arch: ["x86", "x64", "arm64"]
 
     runs-on: windows-2022
 
@@ -44,12 +40,16 @@ jobs:
           restore-keys: |
             vcpkg-${{ runner.os }}-
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: '**/vcpkg.json'
-          vcpkgGitCommitId: 'HEAD' # Set this to a specific commit if needed
+              - name: vcpkg build
+              uses: johnwason/vcpkg-action@v6
+              id: vcpkg
+              with:
+                pkgs: boost-date-time
+                triplet: ${{ matrix.arch }}-windows-static
+                cache-key: ${{ matrix.os }}
+                revision: master
+                token: ${{ github.token }}
+                github-binarycache: true
 
       - name: Cache CMake
         uses: actions/cache@v3

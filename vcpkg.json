@@ -1,6 +1,6 @@
 {
-    "name": "my-project",
-    "version": "1.0.0",
+    "name": "main",
+    "version": "latest",
     "dependencies": [
       {
         "name": "opencv4",
