@@ -1,4 +1,4 @@
-name: Windows Server 2022
+name: Build BRISQUE Implementation (x86, x64, arm64)
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
   push:
 
 env:
-  OPENCV_VERSION: 4.10.0
+  OPENCV_VERSION: 4.11.0
 
 jobs:
   build:
@@ -21,9 +21,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          submodules: recursive
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
