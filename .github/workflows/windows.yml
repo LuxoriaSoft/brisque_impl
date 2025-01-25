@@ -40,45 +40,38 @@ jobs:
 
       - name: Install NASM to support SIMD optimizations 
         uses: ilammy/setup-nasm@v1
+      
+      - uses: lukka/get-cmake@latest
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11.5
+      # Setup vcpkg: ensures vcpkg is downloaded and built.
+      # Since vcpkg.json is being used later on to install the packages
+      # when `run-cmake` runs, no packages are installed at this time
+      # (and vcpkg does not run).
+      - name: Setup anew (or from cache) vcpkg (and does not build any package)
+        uses: lukka/run-vcpkg@v11 # Always specify the specific _version_ of the
+                                  # action you need, `v11` in this case to stay up
+                                  # to date with fixes on the v11 branch.
+        #with:
+          # This is the default location of the directory containing vcpkg sources.
+          # Change it to the right location if needed.
+          # vcpkgDirectory: '${{ github.workspace }}/vcpkg'
 
-      - name: Vcpkg
-        shell: powershell
-        if: ${{ matrix.platform == 'win' }}
-        run: |
-          echo ${env:VCPKG_ROOT}
-          & ${env:VCPKG_ROOT}\vcpkg install tesseract:${{matrix.arch}}-windows-static
-          & ${env:VCPKG_ROOT}\vcpkg integrate install
-          & ${env:VCPKG_ROOT}\vcpkg list
-          ls ${env:VCPKG_ROOT}\installed
-          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static
-          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\include
-          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\lib
+          # If not using a submodule for vcpkg sources, this specifies which commit
+          # id must be checkout from a Git repo.
+          # Note: it must not be set if using a Git submodule for vcpkg.
+          # vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
 
-      - name: Build OpenCV
-        shell: powershell
-        run: |
-          Set-PSDebug -Trace 1
-          if ("${{matrix.platform}}" -eq 'win'){
-            . ".\build_windows.ps1"
-            BuildForWindows ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
-          }
-          elseif ("${{matrix.platform}}" -eq 'uwp'){
-            . ".\build_uwp.ps1"
-            BuildForUWP ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
-          }
+          # This is only needed if the command `vcpkg install` must run at this step.
+          # Instead it is highly suggested to let `run-cmake` to run vcpkg later on
+          # using the vcpkg.cmake toolchain. The default is `false`.
+          # runVcpkgInstall: true
 
-      - name: Set Version Variable
-        id: version
-        shell: powershell
-        run: |
-          $v = ${env:OPENCV_VERSION}.Replace(".", "")
-          echo "::set-output name=OPENCV_VERSION_MOD::${v}"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: opencv${{steps.version.outputs.OPENCV_VERSION_MOD}}_${{matrix.platform}}_${{matrix.arch}}
-          path: build_${{matrix.platform}}_${{matrix.arch}}/install
+          # This is only needed if `runVpkgInstall` is `true`.
+          # This glob expression used to locate the vcpkg.json and  use
+          # its directory location as `working directory` when running `vcpkg install`.
+          # Change it to match a single manifest file you want to use.
+          # Note: do not use `${{ github.context }}` to compose the value as it
+          # contains backslashes that would be misinterpreted. Instead
+          # compose a value relative to the root of the repository using
+          # `**/path/from/root/of/repo/to/vcpkg.json` to match the desired `vcpkg.json`.
+          # vcpkgJsonGlob: '**/vcpkg.json'
