@@ -42,6 +42,11 @@ jobs:
           token: ${{ github.token }}
           github-binarycache: true
       
+      - name: Debug vcpkg root
+        shell: pwsh
+        run: |
+          echo "vcpkg root: ${{ steps.vcpkg.outputs.vcpkg-root }}"
+        
       - name: Debug vcpkg installation
         shell: pwsh
         run: |
