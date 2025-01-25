@@ -40,16 +40,16 @@ jobs:
           restore-keys: |
             vcpkg-${{ runner.os }}-
 
-              - name: vcpkg build
-              uses: johnwason/vcpkg-action@v6
-              id: vcpkg
-              with:
-                pkgs: boost-date-time
-                triplet: ${{ matrix.arch }}-windows-static
-                cache-key: ${{ matrix.os }}
-                revision: master
-                token: ${{ github.token }}
-                github-binarycache: true
+      - name: vcpkg build
+        uses: johnwason/vcpkg-action@v6
+        id: vcpkg
+        with:
+          pkgs: boost-date-time
+          triplet: ${{ matrix.arch }}-windows-static
+          cache-key: ${{ matrix.os }}
+          revision: master
+          token: ${{ github.token }}
+          github-binarycache: true
 
       - name: Cache CMake
         uses: actions/cache@v3
