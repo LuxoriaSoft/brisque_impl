@@ -11,6 +11,8 @@ if(DEFINED ENV{VCPKG_INSTALLED_DIR})
     set(OpenCV_ROOT "$ENV{VCPKG_INSTALLED_DIR}/${CMAKE_VCPKG_TARGET_TRIPLET}/share/opencv4")
 endif()
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 # Find the OpenCV library
 find_package(OpenCV REQUIRED)
 
@@ -30,3 +32,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 set_target_properties(brisque_quality PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
+
+# Suppress library conflicts
+target_link_options(brisque_quality PRIVATE "/NODEFAULTLIB:library")
