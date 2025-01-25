@@ -30,23 +30,13 @@ jobs:
 
       - uses: lukka/get-cmake@latest
 
-      - name: Cache vcpkg
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/vcpkg
-            ${{ github.workspace }}/vcpkg/downloads
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
-
       - name: vcpkg build
         uses: johnwason/vcpkg-action@v6
         id: vcpkg
         with:
-          pkgs: boost-date-time
+          pkgs: opencv4[contrib],boost-date-time
           triplet: ${{ matrix.arch }}-windows-static
-          cache-key: ${{ matrix.os }}
+          cache-key: vcpkg-${{ matrix.arch }}-${{ matrix.os }}
           revision: master
           token: ${{ github.token }}
           github-binarycache: true
@@ -64,5 +54,5 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -A ${{ matrix.arch }} -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -A ${{ matrix.arch }} -DCMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.vcpkgRoot }}/scripts/buildsystems/vcpkg.cmake
           cmake --build . --config Release
