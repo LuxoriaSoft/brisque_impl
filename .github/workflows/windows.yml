@@ -41,17 +41,17 @@ jobs:
           revision: master
           token: ${{ github.token }}
           github-binarycache: true
-      
+    
       - name: Debug vcpkg root
         shell: pwsh
         run: |
-          echo "vcpkg root: ${{ steps.vcpkg.outputs.vcpkg-root }}"
-        
+          Write-Host "Using static vcpkg root: D:/a/opencv_contrib1/opencv_contrib1/vcpkg"
+      
       - name: Debug vcpkg installation
         shell: pwsh
         run: |
-          Get-ChildItem -Path "${{ steps.vcpkg.outputs.vcpkg-root }}/installed" -Recurse
-
+          Get-ChildItem -Path "D:/a/opencv_contrib1/opencv_contrib1/vcpkg/installed" -Recurse
+      
       - name: Configure Project with CMake
         shell: pwsh
         run: |
@@ -66,9 +66,10 @@ jobs:
               -DCMAKE_TOOLCHAIN_FILE="D:/a/opencv_contrib1/opencv_contrib1/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static
           }
-        
-
+      
       - name: Build Project with CMake
+        shell: pwsh
         run: |
           cd build
           cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
+      
