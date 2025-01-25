@@ -1,0 +1,87 @@
+name: Windows Server 2022
+
+on:
+  pull_request:
+    types: [synchronize, opened]
+
+env:
+  OPENCV_VERSION: 4.10.0
+
+jobs:
+  build:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ["win"]
+        #platform: ["win", "uwp"]
+        arch: ["x86", "x64", "ARM", "arm64"]
+        exclude:
+          - platform: win
+            arch: ARM
+
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Install Server-Media-Foundation
+        shell: powershell
+        run: |
+          Install-WindowsFeature Server-Media-Foundation
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install NASM to support SIMD optimizations 
+        uses: ilammy/setup-nasm@v1
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11.5
+        if: ${{ matrix.platform == 'win' }}
+        with:
+          vcpkgGitCommitId: "64adda19c86e89526b5e27703a193c14477cce07"
+          vcpkgGitURL: https://github.com/shimat/vcpkg.git
+
+      - name: Vcpkg
+        shell: powershell
+        if: ${{ matrix.platform == 'win' }}
+        run: |
+          echo ${env:VCPKG_ROOT}
+          & ${env:VCPKG_ROOT}\vcpkg install tesseract:${{matrix.arch}}-windows-static
+          & ${env:VCPKG_ROOT}\vcpkg integrate install
+          & ${env:VCPKG_ROOT}\vcpkg list
+          ls ${env:VCPKG_ROOT}\installed
+          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static
+          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\include
+          ls ${env:VCPKG_ROOT}\installed\${{matrix.arch}}-windows-static\lib
+
+      - name: Build OpenCV
+        shell: powershell
+        run: |
+          Set-PSDebug -Trace 1
+          if ("${{matrix.platform}}" -eq 'win'){
+            . ".\build_windows.ps1"
+            BuildForWindows ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
+          }
+          elseif ("${{matrix.platform}}" -eq 'uwp'){
+            . ".\build_uwp.ps1"
+            BuildForUWP ${{matrix.arch}} "${env:VCPKG_ROOT}" $TRUE
+          }
+
+      - name: Set Version Variable
+        id: version
+        shell: powershell
+        run: |
+          $v = ${env:OPENCV_VERSION}.Replace(".", "")
+          echo "::set-output name=OPENCV_VERSION_MOD::${v}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencv${{steps.version.outputs.OPENCV_VERSION_MOD}}_${{matrix.platform}}_${{matrix.arch}}
+          path: build_${{matrix.platform}}_${{matrix.arch}}/install
