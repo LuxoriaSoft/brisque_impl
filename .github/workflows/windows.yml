@@ -35,7 +35,8 @@ jobs:
         id: vcpkg
         with:
           pkgs: |
-            opencv4[contrib,nonfree]
+            opencv4[contrib]
+            libsvm
           triplet: ${{ matrix.arch }}-windows-static
           cache-key: vcpkg-${{ matrix.arch }}-${{ matrix.os }}
           revision: master
