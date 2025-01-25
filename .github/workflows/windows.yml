@@ -42,9 +42,10 @@ jobs:
           token: ${{ github.token }}
           github-binarycache: true
       
-      - name: Look at opencv folder
+      - name: Debug vcpkg installation
+        shell: pwsh
         run: |
-          ls -la ${{ steps.vcpkg.outputs.vcpkg-root }}/installed/
+          Get-ChildItem -Path "${{ steps.vcpkg.outputs.vcpkg-root }}/installed" -Recurse
 
       - name: Configure Project with CMake
         shell: pwsh
