@@ -73,7 +73,7 @@ jobs:
           cmake --build . --config Release -- /p:Platform=${{ matrix.arch }}
       
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: opencv-${{ matrix.arch }}
           path: build/Release
