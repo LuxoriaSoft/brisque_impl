@@ -6,9 +6,10 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Set OpenCV_DIR to the location of your OpenCV build directory
-# Update this path to where your OpenCVConfig.cmake file is located
-set(OpenCV_DIR "./ext_libs/opencv/build")
+# Set OpenCV_ROOT for vcpkg-installed OpenCV
+if(DEFINED ENV{VCPKG_INSTALLED_DIR})
+    set(OpenCV_ROOT "$ENV{VCPKG_INSTALLED_DIR}/${CMAKE_VCPKG_TARGET_TRIPLET}/share/opencv4")
+endif()
 
 # Find the OpenCV library
 find_package(OpenCV REQUIRED)

@@ -30,7 +30,7 @@ jobs:
 
       - uses: lukka/get-cmake@latest
 
-      - name: vcpkg build
+      - name: Build and Install Dependencies with vcpkg
         uses: johnwason/vcpkg-action@v6
         id: vcpkg
         with:
@@ -42,18 +42,14 @@ jobs:
           token: ${{ github.token }}
           github-binarycache: true
 
-      - name: Cache CMake
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/build
-          key: cmake-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            cmake-${{ runner.os }}-
-
-      - name: Configure and Build
+      - name: Configure Project with CMake
         run: |
           mkdir build
           cd build
-          cmake .. -A ${{ matrix.arch }} -DCMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.vcpkgRoot }}/scripts/buildsystems/vcpkg.cmake
+          cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.vcpkg.outputs.vcpkgRoot }}/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build Project with CMake
+        run: |
+          cd build
           cmake --build . --config Release
