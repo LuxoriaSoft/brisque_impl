@@ -41,6 +41,10 @@ jobs:
           revision: master
           token: ${{ github.token }}
           github-binarycache: true
+      
+      - name: Look at opencv folder
+        run: |
+          ls -la ${{ steps.vcpkg.outputs.vcpkg-root }}/installed/
 
       - name: Configure Project with CMake
         shell: pwsh
