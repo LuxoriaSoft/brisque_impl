@@ -11,7 +11,7 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-# Set OpenCV_ROOT if vcpkg is being used
+# Set OpenCV_ROOT for vcpkg
 if(DEFINED ENV{VCPKG_INSTALLED_DIR})
     set(OpenCV_DIR "$ENV{VCPKG_INSTALLED_DIR}/${CMAKE_VCPKG_TARGET_TRIPLET}/share/opencv4")
 endif()
@@ -19,19 +19,13 @@ endif()
 # Find OpenCV
 find_package(OpenCV REQUIRED)
 
-# Source files
-set(SOURCES
-    BrisqueAlgorithm.cpp
-    BrisqueInterop.cpp
-)
-
 # Add the library (shared by default)
-add_library(brisque_quality SHARED ${SOURCES})
+add_library(brisque_quality SHARED main.cpp)
 
 # Include directories
 target_include_directories(brisque_quality
     PUBLIC
-        ${CMAKE_SOURCE_DIR}  # Include current project directory
+        ${CMAKE_SOURCE_DIR}/includes  # Include 'includes' folder
         ${OpenCV_INCLUDE_DIRS}
 )
 
@@ -48,6 +42,7 @@ set_target_properties(brisque_quality PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
+# Suppress library conflicts for MSVC
 if(MSVC)
     target_link_options(brisque_quality PRIVATE "/NODEFAULTLIB:library")
 endif()
