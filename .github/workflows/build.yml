@@ -69,6 +69,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: opencv-${{ matrix.arch }}
-          path: build/Release
+          name: brisque-quality-${{ matrix.arch }}
+          path: build/bin/
+        
       
