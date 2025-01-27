@@ -7,12 +7,12 @@
 #endif
 
 extern "C" {
-    // Create and initialize a BRISQUE algorithm instance
+    // Create a BRISQUE algorithm instance
     EXPORT_API void* CreateBrisqueAlgorithm(const char* modelPath, const char* rangePath);
 
-    // Compute BRISQUE score for a given image
+    // Compute the BRISQUE score for an image
     EXPORT_API double ComputeBrisqueScore(void* brisqueInstance, const char* imagePath);
 
-    // Release resources used by a BRISQUE algorithm instance
+    // Release a BRISQUE algorithm instance
     EXPORT_API void ReleaseBrisqueAlgorithm(void* brisqueInstance);
 }

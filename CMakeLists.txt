@@ -20,12 +20,15 @@ endif()
 find_package(OpenCV REQUIRED)
 
 # Add the library (shared by default)
-add_library(brisque_quality SHARED main.cpp)
+add_library(brisque_quality SHARED
+    BrisqueAlgorithm.cpp
+    BrisqueInterop.cpp
+)
 
 # Include directories
 target_include_directories(brisque_quality
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/includes  # Include 'includes' folder
+        ${CMAKE_SOURCE_DIR}/includes
         ${OpenCV_INCLUDE_DIRS}
 )
 
